@@ -57,7 +57,10 @@ function Winwheel(options, drawWheel)
         'imageOverlay'      : false,        // If set to true in image drawing mode the outline of the segments will be displayed over the image. Does nothing in code drawMode.
         'drawText'          : true,         // By default the text of the segments is rendered in code drawMode and not in image drawMode.
         'pointerAngle'      : 0,            // Location of the pointer that indicates the prize when wheel has stopped. Default is 0 so the (corrected) 12 o'clock position.
-        'wheelImage'        : null          // Must be set to image data in order to use image to draw the wheel - drawMode must also be 'image'.
+        'wheelImage'        : null,         // Must be set to image data in order to use image to draw the wheel - drawMode must also be 'image'.
+        'displayFps'        : false,        // For assessing animation performance, set to true to display FPS top-left of canvas.
+        'logFps'            : false,        // If set to true the FPS will be written to the console (quite verbose but allows to see over time).
+        'fpsLogElementId'   : null          // Set to ID of div or other element on screen FPS is to be logged to.
     };
     
     // -----------------------------------------
@@ -1522,6 +1525,16 @@ Winwheel.prototype.startAnimation = function()
         // Set this global variable to this object as an external function is required to call the draw() function on the wheel
         // each loop of the animation as Greensock cannot call the draw function directly on this class.
         winwheelToDrawDuringAnimation = this;
+        
+        //+++++++++++++++++++++++++++++++++++
+        // Set some things up for the FPS logging.
+        ectx = this.ctx;
+        
+        if (this.fpsLogElementId != null)
+        {
+            logDomElement = document.getElementById(this.fpsLogElementId);
+        }
+        //+++++++++++++++++++++++++++++++++++
     
         // Instruct tween to call the winwheel animation loop each tick of the animation
         // this is required in order to re-draw the wheel and actually show the animation.
@@ -1925,6 +1938,13 @@ function winwheelPercentToDegrees(percentValue)
 // ====================================================================================================================
 var winwheelToDrawDuringAnimation = null;  // This global is set by the winwheel class to the wheel object to be re-drawn.
 
+//+++++++++++++++++++++++++++++++++++
+// Need to work out better and propper way to do this FPS thing.
+var lastTime = 0;
+var ectx = null;
+var logDomElement = null;
+//+++++++++++++++++++++++++++++++++++
+
 function winwheelAnimationLoop()
 {
     if (winwheelToDrawDuringAnimation)
@@ -1949,6 +1969,44 @@ function winwheelAnimationLoop()
         {
             eval(winwheelToDrawDuringAnimation.animation.callbackAfter);
         }
+        
+        //+++++++++++++++++++++++++++++++++++
+        // Work out the FPS if either of those options are set to true.
+        if ((winwheelToDrawDuringAnimation.displayFps == true) || (winwheelToDrawDuringAnimation.logFps == true))
+        {
+            // Calculate the fps.
+            var nowTime = Date.now();
+            var delta = (nowTime - lastTime);
+            
+            fps = Math.round(1000/delta);
+            lastTime = nowTime;
+            
+            // Write this in top-left of canvas if to display.
+            if (winwheelToDrawDuringAnimation.displayFps == true)
+            {
+                ectx.save();
+                ectx.font = "25px bold helvetica";
+                ectx.textAlign = "left";
+                ectx.fillStyle = "black";
+                ectx.fillText("FPS:" + fps, 0, 30);
+                ectx.restore();
+            }
+            
+            if (winwheelToDrawDuringAnimation.logFps == true)
+            {
+                if (winwheelToDrawDuringAnimation.fpsLogElementId !== null)
+                {
+                    // Output to this item.
+                    logDomElement.innerHTML += '<br />' + fps;
+                }
+                else
+                {
+                    // Output to the log. This is hard to get to on mobile.
+                    console.log("FPS at " + nowTime + " was " + fps);
+                }
+            }
+        }
+        //+++++++++++++++++++++++++++++++++++
     }
 }
 
@@ -1970,4 +2028,7 @@ function winwheelStopAnimation(canCallback)
             eval(winwheelToDrawDuringAnimation.animation.callbackFinished);
         }
     }
+    
+    // Reset for next time.
+    lastTime = 0;
 }
