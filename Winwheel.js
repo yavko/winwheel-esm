@@ -696,8 +696,13 @@ Winwheel.prototype.drawSegments = function()
                     }
                     else
                     {
-                       //++ do need to draw the starting line in the correct x + y based on the start angle
-                       //++ otherwise as seen when the wheel does not use up 360 the starting segment is missing the stroked side,
+                       // Work out the x and y values for the starting point of the segment which is at its starting angle
+                       // but out from the center point of the wheel by the value of the innerRadius. Some correction for line width is needed.
+                       var iX = Math.cos(this.degToRad(seg.startAngle + this.rotationAngle - 90)) * (this.innerRadius - lineWidth / 2);
+                       var iY = Math.sin(this.degToRad(seg.startAngle + this.rotationAngle - 90)) * (this.innerRadius - lineWidth / 2);
+
+                       // Now move here relative to the center point of the wheel.
+                       this.ctx.moveTo(this.centerX + iX, this.centerY + iY);
                     }
 
                     // Draw the outer arc of the segment clockwise in direction -->
@@ -707,10 +712,6 @@ Winwheel.prototype.drawSegments = function()
                     {
                         // Draw another arc, this time anticlockwise <-- at the innerRadius between the end angle and the start angle.
                         // Canvas will draw a connecting line from the end of the outer arc to the beginning of the inner arc completing the shape.
-
-                        //++ Think the reason the lines are thinner for 2 of the segments is because the thing auto chops part of it
-                        //++ when doing the next one. Again think that actually drawing the lines will help.
-
                         this.ctx.arc(this.centerX, this.centerY, this.innerRadius, this.degToRad(seg.endAngle + this.rotationAngle - 90), this.degToRad(seg.startAngle + this.rotationAngle - 90), true);
                     }
                     else
