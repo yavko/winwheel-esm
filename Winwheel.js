@@ -241,6 +241,9 @@ function Winwheel(options, drawWheel)
         this.pointerGuide = new PointerGuide();
     }
 
+    //++ Added for multiwheel.
+    winwheelsOnThisScreen.push(this);
+
     // Finally if drawWheel is true then call function to render the wheel, segment text, overlay etc.
     if (drawWheel == true)
     {
@@ -250,7 +253,7 @@ function Winwheel(options, drawWheel)
     {
         // If segment image then loop though all the segments and load the images for them setting a callback
         // which will call the draw function of the wheel once all the images have been loaded.
-        winwheelToDrawDuringAnimation = this;
+        //++winwheelToDrawDuringAnimation = this;
         winhweelAlreadyDrawn = false;
 
         for (y = 1; y <= this.numSegments; y ++)
@@ -1793,6 +1796,8 @@ Winwheel.prototype.getRotationPosition = function()
     return rawAngle;
 }
 
+var winwheelAnimationsComplete = true;
+
 // ==================================================================================================================================================
 // This function starts the wheel's animation by using the properties of the animation object of of the wheel to begin the a greensock tween.
 // ==================================================================================================================================================
@@ -1805,7 +1810,7 @@ Winwheel.prototype.startAnimation = function()
 
         // Set this global variable to this object as an external function is required to call the draw() function on the wheel
         // each loop of the animation as Greensock cannot call the draw function directly on this class.
-        winwheelToDrawDuringAnimation = this;
+        //++ winwheelToDrawDuringAnimation = this;
 
         // Put together the properties of the greesock animation.
         var properties = new Array(null);
@@ -1813,8 +1818,16 @@ Winwheel.prototype.startAnimation = function()
         properties['yoyo']       = this.animation.yoyo;     // Set others.
         properties['repeat']     = this.animation.repeat;
         properties['ease']       = this.animation.easing;
-        properties['onUpdate']   = winwheelAnimationLoop;   // Call function to re-draw the canvas.
+        //properties['onUpdate']   = winwheelAnimationLoop;   // Call function to re-draw the canvas.
         properties['onComplete'] = winwheelStopAnimation;   // Call function to perform actions when animation has finished.
+        //++ Temp fix for onComplete triggering callback for first wheel multiple times.
+        winwheelAnimationsComplete = false;
+
+        //++ for multiwheel. If only one wheel in the array then turn the animation on automatically.
+        //if (winwheelsOnThisScreen.length === 1)
+        //{
+        //    winwheelAniLoopOn();
+        //}
 
         // Do the tween animation passing the properties from the animation object as an array of key => value pairs.
         // Keep reference to the tween object in the wheel as that allows pausing, resuming, and stopping while the animation is still running.
@@ -1828,18 +1841,18 @@ Winwheel.prototype.startAnimation = function()
 Winwheel.prototype.stopAnimation = function(canCallback)
 {
     // @TODO as part of multiwheel, need to work out how to stop the tween for a single wheel but allow others to continue.
-
+    //++ @TODO revisit for multiwheel.
     // We can kill the animation using our tween object.
-    if (winwheelToDrawDuringAnimation)
-    {
-        winwheelToDrawDuringAnimation.tween.kill();
+    //if (winwheelToDrawDuringAnimation)
+    //{
+        //winwheelToDrawDuringAnimation.tween.kill();
 
         // Call the callback function.
         winwheelStopAnimation(canCallback);
-    }
+    //}
 
     // Ensure the winwheelToDrawDuringAnimation is set to this class.
-    winwheelToDrawDuringAnimation = this;
+    //++winwheelToDrawDuringAnimation = this;
 }
 
 // ==================================================================================================================================================
@@ -2281,55 +2294,68 @@ function winwheelPercentToDegrees(percentValue)
 // ====================================================================================================================
 function winwheelAnimationLoop()
 {
-    if (winwheelToDrawDuringAnimation)
+    if (winwheelsOnThisScreen)
     {
-        // Check if the clearTheCanvas is specified for this animation, if not or it is not false then clear the canvas.
-        if (winwheelToDrawDuringAnimation.animation.clearTheCanvas != false)
+        for (var x = 0; x < winwheelsOnThisScreen.length; x++)
         {
-            winwheelToDrawDuringAnimation.ctx.clearRect(0, 0, winwheelToDrawDuringAnimation.canvas.width, winwheelToDrawDuringAnimation.canvas.height);
-        }
-
-        var callbackBefore = winwheelToDrawDuringAnimation.animation.callbackBefore;
-        var callbackAfter = winwheelToDrawDuringAnimation.animation.callbackAfter;
-
-        // If there is a callback function which is supposed to be called before the wheel is drawn then do that.
-        if (callbackBefore != null)
-        {
-            // If the property is a function then call it, otherwise eval the proptery as javascript code.
-            if (typeof callbackBefore === 'function')
+            // If the canvas is to be cleared during the animation for this wheel then do so (default is to if not specified).
+            if (winwheelsOnThisScreen[x].animation.clearTheCanvas != false)
             {
-                callbackBefore();
+                winwheelsOnThisScreen[x].ctx.clearRect(0, 0, winwheelsOnThisScreen[x].canvas.width, winwheelsOnThisScreen[x].canvas.height);
             }
-            else
-            {
-                eval(callbackBefore);
-            }
-        }
 
-        // Call code to draw the wheel, pass in false as we never want it to clear the canvas as that would wipe anything drawn in the callbackBefore.
-        winwheelToDrawDuringAnimation.draw(false);
+            // If there is a callback function which is supposed to be called before the wheel is drawn then do that.
+            var callbackBefore = winwheelsOnThisScreen[x].animation.callbackBefore;
 
-        // If there is a callback function which is supposed to be called after the wheel has been drawn then do that.
-        if (callbackAfter != null)
-        {
-            // If the property is a function then call it, otherwise eval the proptery as javascript code.
-            if (typeof callbackAfter === 'function')
+            if (winwheelsOnThisScreen[x].animation.callbackBefore != null)
             {
-                callbackAfter();
-            }
-            else
-            {
-                eval(callbackAfter);
-            }
-        }
+                if (typeof callbackBefore === 'function') {
+                    callbackBefore();
+                } else {
+                    eval(callbackBefore);
+                }
 
-        // If there is a sound callback then call a function which figures out if the sound should be triggered
-        // and if so then call the function specified by the developer.
-        if (winwheelToDrawDuringAnimation.animation.callbackSound)
-        {
-            winwheelTriggerSound();
+                eval(winwheelsOnThisScreen[x].animation.callbackBefore);
+            }
+
+            // Actually redraw the wheel, pass in false as we never want the canvas to be cleared by the draw function. We took care of that above.
+            winwheelsOnThisScreen[x].draw(false);
+
+            // If there is a callback function which is supposed to be called after the wheel has been drawn then do that.
+            var callbackAfter = winwheelsOnThisScreen[x].animation.callbackAfter;
+
+            if (winwheelsOnThisScreen[x].animation.callbackAfter != null)
+            {
+                if (typeof callbackAfter === 'function') {
+                    callbackAfter();
+                } else {
+                    eval(callbackAfter);
+                }
+            }
+
+            // Check for callback sound.
+            if (winwheelsOnThisScreen[x].animation.callbackSound != null)
+            {
+                winwheelTriggerSound();
+            }
         }
     }
+}
+
+// ====================================================================================================================
+// Engages the animation loop by getting the greensock ticker to call our animation loop function.
+// ====================================================================================================================
+function winwheelAniLoopOn()
+{
+    TweenMax.ticker.addEventListener("tick", winwheelAnimationLoop);
+}
+
+// ====================================================================================================================
+// Disengages the animation loop from the ticker. Wheels will stop being re-drawn.
+// ====================================================================================================================
+function winwheelAniLoopOff()
+{
+    TweenMax.ticker.removeEventListener("tick", winwheelAnimationLoop);
 }
 
 // ====================================================================================================================
@@ -2338,30 +2364,32 @@ function winwheelAnimationLoop()
 // ====================================================================================================================
 function winwheelTriggerSound()
 {
+    //++ Again for multiwheel I have just quickly changed this from winwheelToDrawDuringAniamtion to the first on the screen.
+    //++ means sound will only trigger from the first wheel on the screen which might be ok as that should be the outer one.
     // If this property does not exist then add it as a property of the winwheel.
-    if (winwheelToDrawDuringAnimation.hasOwnProperty('_lastSoundTriggerNumber') == false)
+    if (winwheelsOnThisScreen[0].hasOwnProperty('_lastSoundTriggerNumber') == false)
     {
-        winwheelToDrawDuringAnimation._lastSoundTriggerNumber = 0;
+        winwheelsOnThisScreen[0]._lastSoundTriggerNumber = 0;
     }
 
-    var callbackSound = winwheelToDrawDuringAnimation.animation.callbackSound;
+    var callbackSound = winwheelsOnThisScreen[0].animation.callbackSound;
     var currentTriggerNumber = 0;
 
     // Now figure out if the sound callback should be called depending on the sound trigger type.
-    if (winwheelToDrawDuringAnimation.animation.soundTrigger == 'pin')
+    if (winwheelsOnThisScreen[0].animation.soundTrigger == 'pin')
     {
         // So for the pin type we need to work out which pin we are between.
-        currentTriggerNumber = winwheelToDrawDuringAnimation.getCurrentPinNumber();
+        currentTriggerNumber = winwheelsOnThisScreen[0].getCurrentPinNumber();
     }
     else
     {
         // Check on the change of segment by working out which segment we are in.
         // We can utilise the existing getIndiatedSegmentNumber function.
-        currentTriggerNumber = winwheelToDrawDuringAnimation.getIndicatedSegmentNumber();
+        currentTriggerNumber = winwheelsOnThisScreen[0].getIndicatedSegmentNumber();
     }
 
     // If the current number is not the same as last time then call the sound callback.
-    if (currentTriggerNumber != winwheelToDrawDuringAnimation._lastSoundTriggerNumber)
+    if (currentTriggerNumber != winwheelsOnThisScreen[0]._lastSoundTriggerNumber)
     {
         // If the property is a function then call it, otherwise eval the proptery as javascript code.
         if (typeof callbackSound === 'function')
@@ -2374,14 +2402,14 @@ function winwheelTriggerSound()
         }
 
         // Also update the last sound trigger with the current number.
-        winwheelToDrawDuringAnimation._lastSoundTriggerNumber = currentTriggerNumber;
+        winwheelsOnThisScreen[0]._lastSoundTriggerNumber = currentTriggerNumber;
     }
 }
 
 // ====================================================================================================================
 // This function is called-back when the greensock animation has finished.
 // ====================================================================================================================
-var winwheelToDrawDuringAnimation = null;  // This global is set by the winwheel class to the wheel object to be re-drawn.
+var winwheelsOnThisScreen = []; //++ for multiwheel.
 
 function winwheelStopAnimation(canCallback)
 {
@@ -2389,7 +2417,16 @@ function winwheelStopAnimation(canCallback)
     // false can be passed in to stop the after happening if the animation has been stopped before it ended normally.
     if (canCallback != false)
     {
-        var callback = winwheelToDrawDuringAnimation.animation.callbackFinished;
+        var callback = null;
+
+        //++ Callback can only now be specified on the first wheel added to the screen.
+        //++ This is called once for each wheel as they are set up to come here.
+        if (winwheelAnimationsComplete == false)
+        {
+            callback = winwheelsOnThisScreen[0].animation.callbackFinished;
+            winwheelsOnThisScreen[0].tween.kill();
+            winwheelAnimationsComplete = true;
+        }
 
         if (callback != null)
         {
@@ -2397,7 +2434,7 @@ function winwheelStopAnimation(canCallback)
             if (typeof callback === 'function')
             {
                 // Pass back the indicated segment as 99% of the time you will want to know this to inform the user of their prize.
-                callback(winwheelToDrawDuringAnimation.getIndicatedSegment());
+                callback(winwheelsOnThisScreen[0].getIndicatedSegment());
             }
             else
             {
@@ -2413,6 +2450,8 @@ function winwheelStopAnimation(canCallback)
 // ====================================================================================================================
 var winhweelAlreadyDrawn = false;
 
+//++ @TODO revist as quickly hacked to change winwheelToDrawDuring animation to the first one on the screen.
+//++ means that also drawing after image loaded only work for the first one.
 function winwheelLoadedImage()
 {
     // Prevent multiple drawings of the wheel which ocurrs without this check due to timing of function calls.
@@ -2422,22 +2461,22 @@ function winwheelLoadedImage()
         var winwheelImageLoadCount = 0;
 
         // Loop though all the segments of the wheel and check if image data loaded, if so increment counter.
-        for (i = 1; i <= winwheelToDrawDuringAnimation.numSegments; i ++)
+        for (i = 1; i <= winwheelsOnThisScreen[0].numSegments; i ++)
         {
             // Check the image data object is not null and also that the image has completed loading by checking
             // that a property of it such as the height has some sort of true value.
-            if ((winwheelToDrawDuringAnimation.segments[i].imgData != null) && (winwheelToDrawDuringAnimation.segments[i].imgData.height))
+            if ((winwheelsOnThisScreen[0].segments[i].imgData != null) && (winwheelsOnThisScreen[0].segments[i].imgData.height))
             {
                 winwheelImageLoadCount ++;
             }
         }
 
         // If number of images loaded matches the segments then all the images for the wheel are loaded.
-        if (winwheelImageLoadCount == winwheelToDrawDuringAnimation.numSegments)
+        if (winwheelImageLoadCount == winwheelsOnThisScreen[0].numSegments)
         {
             // Call draw function to render the wheel.
             winhweelAlreadyDrawn = true;
-            winwheelToDrawDuringAnimation.draw();
+            winwheelsOnThisScreen[0].draw();
         }
     }
 }

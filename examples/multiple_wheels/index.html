@@ -1,0 +1,168 @@
+<!--
+    Winhweel.js basic code wheel example by Douglas McKechie @ www.dougtesting.net
+    See website for tutorials and other documentation.
+
+    The MIT License (MIT)
+
+    Copyright (c) 2018 Douglas McKechie
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+-->
+<html>
+    <head>
+        <title>HTML5 Canvas Winning Wheel</title>
+        <link rel="stylesheet" href="main.css" type="text/css" />
+        <script type="text/javascript" src="../../Winwheel.js"></script>
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
+    </head>
+    <body>
+        <div align="center">
+            <h1>Winwheel.js multiple wheels same canvas</h1>
+            <p>Here is an example of multiple wheels on the same canvas. Uses a modified Winwheel.js for this purpose.</p>
+            <br />
+            <table cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                    <td>
+                        <img id="spin_button" src="spin_off.png" alt="Spin" onClick="startSpin();" />
+                    </td>
+                    <td width="438" height="582" class="the_wheel" align="center" valign="center">
+                        <canvas id="canvas" width="434" height="434">
+                            <p style="{color: white}" align="center">Sorry, your browser doesn't support canvas. Please try another.</p>
+                        </canvas>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <script>
+            // Define the wheels - in this case multiple on the same canvas. Largest outisde one first.
+            var wheel1 = new Winwheel({
+                'numSegments'    : 8,     // Specify number of segments.
+                'outerRadius'    : 212,   // Set outer radius so wheel fits inside the background.
+                'textFontSize'   : 18,    // Set font size as desired.
+                'textFontFamily' : 'Courier',
+                //'textOrientation': 'curved',
+                'textAlignment'  : 'outer',
+                'segments'       :        // Define segments including colour and text.
+                [
+                   {'fillStyle' : '#ffffff', 'text' : 'Outer One'},
+                   {'fillStyle' : '#CCFF99', 'text' : 'Outer Two'},
+                   {'fillStyle' : '#ffffff', 'text' : 'Outer Three'},
+                   {'fillStyle' : '#CCFF99', 'text' : 'Outer Four'},
+                   {'fillStyle' : '#ffffff', 'text' : 'Outer Five'},
+                   {'fillStyle' : '#CCFF99', 'text' : 'Outer Six'},
+                   {'fillStyle' : '#ffffff', 'text' : 'Outer Seven'},
+                   {'fillStyle' : '#CCFF99', 'text' : 'Outer Eight'}
+                ],
+                'animation' :           // Specify the animation to use.
+                {
+                    'type'             : 'spinToStop',
+                    'duration'         : 10,    // Duration in seconds.
+                    'spins'            : 3,     // Number of complete spins.
+                    'callbackFinished' : alertPrize
+                }
+            });
+
+            // Second wheel - slightly smaller
+            var wheel2 = new Winwheel({
+                'numSegments'    : 6,     // Specify number of segments.
+                'outerRadius'    : 160,
+                'textFontSize'   : 18,    // Set font size as desired.
+                'textFontFamily' : 'Courier',
+                //'textOrientation': 'curved',
+                'textAlignment'  : 'outer',
+                'clearTheCanvas' : false, // Prevent canvas being cleared on initial draw.
+                'segments'       :        // Define segments including colour and text.
+                [
+                   {'fillStyle' : '#ffffff', 'text' : 'Middle One'},
+                   {'fillStyle' : '#CCFF99', 'text' : 'Middle Two'},
+                   {'fillStyle' : '#ffffff', 'text' : 'Middle Three'},
+                   {'fillStyle' : '#CCFF99', 'text' : 'Middle Four'},
+                   {'fillStyle' : '#ffffff', 'text' : 'Middle Five'},
+                   {'fillStyle' : '#CCFF99', 'text' : 'Middle Six'}
+                ],
+                'animation' :           // Specify the animation to use.
+                {
+                    'type'           : 'spinToStop',
+                    'duration'       : 10,    // Duration in seconds, matches other wheels.
+                    'spins'          : 4,     // Number of complete spins.
+                    'direction'      : 'anti-clockwise', // Make middle wheel spin backwards.
+                    'clearTheCanvas' : false  // Prevents the other wheels being cleared from the canvas.
+                }
+            });
+
+            // Third wheel - smallest
+            var wheel3 = new Winwheel({
+                'numSegments'    : 4,     // Specify number of segments.
+                'outerRadius'    : 100,
+                'textFontSize'   : 18,    // Set font size as desired.
+                'textFontFamily' : 'Courier',
+                //'textOrientation': 'curved',
+                'textAlignment'  : 'outer',
+                'clearTheCanvas' : false, // Prevent canvas being cleared on initial draw.
+                'segments'       :        // Define segments including colour and text.
+                [
+                   {'fillStyle' : '#ffffff', 'text' : 'Inner One'},
+                   {'fillStyle' : '#CCFF99', 'text' : 'Inner Two'},
+                   {'fillStyle' : '#ffffff', 'text' : 'Inner Three'},
+                   {'fillStyle' : '#CCFF99', 'text' : 'Inner Four'}
+                ],
+                'animation' :           // Specify the animation to use.
+                {
+                    'type'           : 'spinToStop',
+                    'duration'       : 10,    // Duration in seconds, matches other wheels.
+                    'spins'          : 1,     // Number of complete spins.
+                    'clearTheCanvas' : false  // Prevents the other wheels being cleared from the canvas.
+                }
+            });
+
+            // -------------------------------------------------------
+            // Click handler for spin button.
+            // -------------------------------------------------------
+            function startSpin()
+            {
+                // Reset the rotation angle of all wheels so they will spin again.
+                wheel1.rotationAngle = 0;
+                wheel2.rotationAngle = 0;
+                wheel3.rotationAngle = 0;
+
+                // Start the animation loop so wheels only re-drawn during animation.
+                winwheelAniLoopOn();
+
+                // Call the start animation loop function on all wheels.
+                wheel1.startAnimation();
+                wheel2.startAnimation();
+                wheel3.startAnimation();
+            }
+
+            // -------------------------------------------------------
+            // Called when the spin animation has finished by the callback feature of the wheel because I specified callback in the parameters
+            // note the indicated segment is passed in as a parmeter as 99% of the time you will want to know this to inform the user of their prize.
+            // -------------------------------------------------------
+            function alertPrize(indicatedSegment)
+            {
+                // Turn the animation loop off to stop re-drawing of the wheels.
+                winwheelAniLoopOff();
+
+                // Work out the result.
+                var result = "Result is " + wheel1.getIndicatedSegment().text + ", " + wheel2.getIndicatedSegment().text + ", " +  wheel3.getIndicatedSegment().text;
+                alert(result);
+            }
+        </script>
+    </body>
+</html>
