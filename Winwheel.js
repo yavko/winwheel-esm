@@ -25,6 +25,8 @@
     SOFTWARE.
 */
 
+import TweenMax from 'gsap/TweenMax';
+
 // ====================================================================================================================
 // The constructor for the WinWheel object, a JSON-like array of options can be passed in.
 // By default the wheel is drawn if canvas object exists on the page, but can pass false as second parameter if don't want this to happen.
@@ -2337,4 +2339,12 @@ function winwheelResize()
 
     // Now re-draw the wheel to ensure the changes in size are rendered.
     winwheelToDrawDuringAnimation.draw();
+}
+
+export {
+    Animation,
+    PointerGuide,
+    Pin,
+    Segment,
+    Winwheel,
 }
