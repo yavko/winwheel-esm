@@ -1,0 +1,22 @@
+{
+  "name": "@yavko/winwheel-esm",
+  "version": "1.0.1",
+  "description": "Create spinning prize wheels on HTML canvas with winwheel-esm",
+  "main": "Winwheel.js",
+  "directories": {
+    "example": "examples"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yavko/winwheel-esm.git"
+  },
+  "author": "yavko",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yavko/winwheel-esm/issues"
+  },
+  "homepage": "https://github.com/yavko/winwheel-esm#readme",
+  "dependencies": {
+    "gsap": "3.9.1"
+  }
+}
