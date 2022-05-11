@@ -1,4 +1,4 @@
-# javascript-winwheel
+# winwheel-esm
 Create spinning prize wheels on HTML canvas with Winwheel.js
 
 ## Description
