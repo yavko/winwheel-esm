@@ -25,7 +25,7 @@
     SOFTWARE.
 */
 
-import TweenMax from 'gsap/TweenMax';
+import { TweenMax } from 'gsap';
 
 // ====================================================================================================================
 // The constructor for the WinWheel object, a JSON-like array of options can be passed in.
