@@ -1,9 +1,9 @@
 {
 	"name": "@yavko/winwheel-esm",
-	"version": "1.0.1",
+	"version": "2.8.0",
 	"type": "module",
 	"description": "Create spinning prize wheels on HTML canvas with winwheel-esm",
-	"main": "Winwheel.js",
+	"main": "mod.js",
 	"directories": {
 		"example": "examples"
 	},
