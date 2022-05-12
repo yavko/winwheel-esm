@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Basic Example</title>
+	<link rel="stylesheet" href="main.css" type="text/css" />
+</head>
+
+<body>
+	<script type="module">
+		import {Winwheel} from 'https://esm.sh/@yavko/winwheel-esm';
+
+		const wheel = new Winwheel({
+			'canvasId': 'canvas',
+			'numSegments': 8,
+			'segments': [
+				{'fillStyle': '#ee4400', 'text': 'Red'},
+				{'fillStyle': '#00cc44', 'text': 'Green'},
+				{'fillStyle': '#ee6600', 'text': 'Orange'},
+				{'fillStyle': '#00ccff', 'text': 'Blue'},
+				{'fillStyle': '#ee66ff', 'text': 'Purple'},
+				{'fillStyle': '#ee44ff', 'text': 'Pink'},
+				{'fillStyle': '#eecc00', 'text': 'Yellow'},
+				{'fillStyle': '#eeccff', 'text': 'White'}
+			],
+			'animation': {
+				'type': 'spinToStop',
+				'duration': 5,
+				'spins': 8
+			}
+
+		})
+
+		const button = document.getElementById('button')
+		button.addEventListener('click', () => {
+			wheel.startAnimation()
+		})
+
+		window.onload = () => {
+			wheel.draw()
+		}
+	</script>
+
+	<canvas id="canvas" height="200px" width="200px"></canvas>
+	<br />
+	<button id="button">Click Me</button>
+</body>
+
+</html>
